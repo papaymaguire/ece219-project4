@@ -1,7 +1,7 @@
 import itertools
 
 from sklearn.decomposition import TruncatedSVD, NMF
-from sklearn.cluster import KMeans, AgglomerativeClustering, HDBSCAN
+from sklearn.cluster import KMeans, AgglomerativeClustering
 from umap import UMAP
 
 class ClusteringExperiment:
@@ -28,7 +28,7 @@ class ClusteringExperiment:
         approved_clusterers = {
             "kmeans": KMeans(random_state=0),
             "agglom": AgglomerativeClustering(),
-            "hdbscan": HDBSCAN()
+           # "hdbscan": HDBSCAN()
         }
         if clusterer not in approved_clusterers:
             raise ValueError("Clusterer not approved")
