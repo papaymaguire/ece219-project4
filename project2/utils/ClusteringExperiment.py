@@ -57,7 +57,7 @@ class ClusteringExperiment:
                 dim_reduced_feats = reducer.fit_transform(features)
                 self.reduced_features.append((dim_reduced_feats, {"dim_reduce": reducer_config[0]} | r_config))
         for cluster_config in self.clusterers:
-            if len(reducer_config[1]) == 0:
+            if len(cluster_config[1]) == 0:
                 raise ValueError("Empty arg_dict found in cluster_config")
             c_keys, c_values = zip(*cluster_config[1].items())
             c_experiments = [dict(zip(c_keys, v)) for v in itertools.product(*c_values)]
