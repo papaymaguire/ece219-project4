@@ -1,7 +1,9 @@
 import itertools
 
+import pandas as pd
 from sklearn.decomposition import TruncatedSVD, NMF
 from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn import metrics
 from umap import UMAP
 
 class ClusteringExperiment:
@@ -9,6 +11,7 @@ class ClusteringExperiment:
     clusterers = []
     reduced_features = []
     clustered_labels = []
+    results = None
     approved_reducers = {
         "none": "passthrough",
         "svd": TruncatedSVD(random_state=0),
@@ -66,3 +69,19 @@ class ClusteringExperiment:
                 for feature_set in self.reduced_features:
                     clusterer.fit(feature_set[0])
                     self.clustered_labels.append((clusterer.labels_, {"clusterer": cluster_config[0]} | feature_set[1] | c_config))
+
+    def eval(self, labels):
+        results = []
+        for strategy in self.clustered_labels:
+            pred_labels = strategy[0]
+            metadata = strategy[1]
+            scores = {}
+            scores["Homogeneity"] = metrics.homogeneity_score(labels, pred_labels)
+            scores["Completeness"] = metrics.completeness_score(labels, pred_labels)
+            scores["V-measure"] = metrics.v_measure_score(labels, pred_labels)
+            scores["Adjusted rand index"] = metrics.adjusted_rand_score(labels, pred_labels)
+            scores["Adjusted mutual information score"] = metrics.adjusted_mutual_info_score(labels, pred_labels)
+            scores["Contingency matrix"] = metrics.cluster.contingency_matrix(labels, pred_labels)
+            results.append(metadata | scores)
+        self.results = pd.DataFrame(results)
+        return self.results
