@@ -1,6 +1,7 @@
 
 # Any temp directories created by Dagster dev
 tmp*
+data*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

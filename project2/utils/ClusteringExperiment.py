@@ -3,7 +3,6 @@ import itertools
 import pandas as pd
 from sklearn.decomposition import TruncatedSVD, NMF
 from sklearn.cluster import KMeans, AgglomerativeClustering
-from sklearn.cluster import 
 
 from sklearn import metrics
 from umap import UMAP
