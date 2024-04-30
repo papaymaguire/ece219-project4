@@ -3,15 +3,12 @@ import itertools
 import pandas as pd
 from sklearn.decomposition import TruncatedSVD, NMF
 from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.cluster import 
+
 from sklearn import metrics
 from umap import UMAP
 
 class ClusteringExperiment:
-    reducers = []
-    clusterers = []
-    reduced_features = []
-    clustered_labels = []
-    results = None
     approved_reducers = {
         "none": "passthrough",
         "svd": TruncatedSVD(random_state=0),
@@ -25,7 +22,11 @@ class ClusteringExperiment:
     }
 
     def __init__(self) -> None:
-        pass
+        self.reducers = []
+        self.clusterers = []
+        self.reduced_features = []
+        self.clustered_labels = []
+        self.results = None
 
     def add_reducer(self, reducer, arg_dict):
         """Any reducer added with an empty arg_dict is ignored, passthrough arg_dict is irrelevant"""
