@@ -109,7 +109,7 @@ class ClusteringExperiment:
                 clusterer = self._get_clusterer(cluster_name)
                 clusterer.set_params(**c_experiment)
                 clusterer.fit(feature_set[0])
-                self.clustered_labels.append((clusterer.labels_), {"method": cluster_name} | c_experiment | feature_set[1])
+                self.clustered_labels.append((clusterer.labels_, {"method": cluster_name} | c_experiment | feature_set[1]))
 
     def eval(self, labels):
         results = []
