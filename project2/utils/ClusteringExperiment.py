@@ -74,14 +74,14 @@ class ClusteringExperiment:
                 continue
             r_keys, r_values = zip(*reducer_config[1].items())
             arg_experiments = [dict(zip(r_keys, v)) for v in itertools.product(*r_values)]
-            self.r_experiments.append([{"dim_reduce": reducer_config[0]} | a for a in arg_experiments])
+            self.r_experiments += [{"dim_reduce": reducer_config[0]} | a for a in arg_experiments]
         for cluster_config in self.clusterers:
             if len(cluster_config[1]) == 0:
                 self.c_experiments.append({"method": cluster_config[0]})
                 continue
             c_keys, c_values = zip(*cluster_config[1].items())
             c_arg_experiments = [dict(zip(c_keys, v)) for v in itertools.product(*c_values)]
-            self.c_experiments.append([{"method": cluster_config[0]} | a for a in c_arg_experiments])
+            self.c_experiments += [{"method": cluster_config[0]} | a for a in c_arg_experiments]
 
     def get_total_experiments(self):
         return len(self.r_experiments) * len(self.c_experiments)
