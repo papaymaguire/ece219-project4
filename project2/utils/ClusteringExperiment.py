@@ -9,7 +9,7 @@ from sklearn import metrics
 from umap import UMAP
 
 from project2.utils.MLP import MLP
-from from project2.utils.Autoencoder import Autoencoder
+from project2.utils.Autoencoder import Autoencoder
 
 approved_reducers = ["none", "svd", "nmf", "umap", "auto"]
 approved_clusterers = ["kmeans", "agglom", "hdbscan", "mlp"]
