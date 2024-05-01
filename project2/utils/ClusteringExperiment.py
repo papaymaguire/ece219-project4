@@ -2,34 +2,56 @@ import itertools
 
 import pandas as pd
 from sklearn.decomposition import TruncatedSVD, NMF
+from project2.utils.Autoencoder import Autoencoder
 from sklearn.cluster import KMeans, AgglomerativeClustering
+from hdbscan import HDBSCAN
+from project2.utils.MLP import MLP
 
 from sklearn import metrics
 from umap import UMAP
 
-class ClusteringExperiment:
-    approved_reducers = {
-        "none": "passthrough",
-        "svd": TruncatedSVD(random_state=0),
-        "nmf": NMF(random_state=0),
-        "umap": UMAP(random_state=0)
-    }
-    approved_clusterers = {
-        "kmeans": KMeans(random_state=0),
-        "agglom": AgglomerativeClustering(),
-        # "hdbscan": HDBSCAN()
-    }
+approved_reducers = ["none", "svd", "nmf", "umap", "auto"]
+approved_clusterers = ["kmeans", "agglom", "hdbscan", "mlp"]
 
+class ClusteringExperiment:
     def __init__(self) -> None:
         self.reducers = []
+        self.r_experiments: list[dict] = []
         self.clusterers = []
+        self.c_experiments: list[dict] = []
         self.reduced_features = []
         self.clustered_labels = []
         self.results = None
 
+    def _get_reducer(self, reducer_name):
+        if reducer_name == "none":
+            return None
+        elif reducer_name == "svd":
+            return TruncatedSVD(random_state=0)
+        elif reducer_name == "nmf":
+            return NMF(random_state=0)
+        elif reducer_name == "umap":
+            return UMAP(random_state=0)
+        elif reducer_name == "auto":
+            return Autoencoder()
+        else:
+            raise ValueError("reducer not approved")
+        
+    def _get_clusterer(self, clusterer_name):
+        if clusterer_name == "kmeans":
+            return KMeans(random_state=0)
+        elif clusterer_name == "agglom":
+            return AgglomerativeClustering()
+        elif clusterer_name == "hdbscan":
+            return HDBSCAN()
+        elif clusterer_name == "mlp":
+            return MLP()
+        else:
+            raise ValueError("clusterer not approved")
+
     def add_reducer(self, reducer, arg_dict):
         """Any reducer added with an empty arg_dict is ignored, passthrough arg_dict is irrelevant"""
-        if reducer not in self.approved_reducers:
+        if reducer not in approved_reducers:
             raise ValueError("Reducer not approved")
         if reducer == "none":
             self.reducers.append((reducer, None))
@@ -40,35 +62,59 @@ class ClusteringExperiment:
 
     def add_clusterer(self, clusterer, arg_dict):
         """Any clusterer added with an empty arg_dict is ignored"""
-        if clusterer not in self.approved_clusterers:
+        if clusterer not in approved_clusterers:
             raise ValueError("Clusterer not approved")
         if len(arg_dict) == 0:
             raise ValueError("Must supply a nonempty arg_dict")
         self.clusterers.append((clusterer, arg_dict))
 
-    def run(self, features):
+    def _design(self):
+        self.r_experiments = []
+        self.c_experiments = []
+
         for reducer_config in self.reducers:
             if reducer_config[0] == "none":
-                self.reduced_features.append((features, {"dim_reduce": "none"}))
+                self.r_experiments.append({"dim_reduce": "none"})
                 continue
             if len(reducer_config[1]) == 0:
                 raise ValueError("Empty arg_dict found in reducer_config")
             r_keys, r_values = zip(*reducer_config[1].items())
-            r_experiments = [dict(zip(r_keys, v)) for v in itertools.product(*r_values)]
-            for r_config in r_experiments:
-                reducer = self.approved_reducers[reducer_config[0]].set_params(**r_config)
-                dim_reduced_feats = reducer.fit_transform(features)
-                self.reduced_features.append((dim_reduced_feats, {"dim_reduce": reducer_config[0]} | r_config))
+            arg_experiments = [dict(zip(r_keys, v)) for v in itertools.product(*r_values)]
+            self.r_experiments.append([{"dim_reduce": reducer_config[0]} | a for a in arg_experiments])
         for cluster_config in self.clusterers:
             if len(cluster_config[1]) == 0:
                 raise ValueError("Empty arg_dict found in cluster_config")
             c_keys, c_values = zip(*cluster_config[1].items())
-            c_experiments = [dict(zip(c_keys, v)) for v in itertools.product(*c_values)]
-            for c_config in c_experiments:
-                clusterer = self.approved_clusterers[cluster_config[0]].set_params(**c_config)
-                for feature_set in self.reduced_features:
-                    clusterer.fit(feature_set[0])
-                    self.clustered_labels.append((clusterer.labels_, {"clusterer": cluster_config[0]} | feature_set[1] | c_config))
+            c_arg_experiments = [dict(zip(c_keys, v)) for v in itertools.product(*c_values)]
+            self.c_experiments.append([{"method": cluster_config[0]} | a for a in c_arg_experiments])
+
+    def get_total_experiments(self):
+        return len(self.r_experiments) * len(self.c_experiments)
+
+    def run(self, features):
+        self._design()
+        if len(self.r_experiments) == 0 or len(self.c_experiments) == 0:
+            raise ValueError("design not called before run or invalid config")
+        
+        for r_experiment in self.r_experiments:
+            reducer_name = r_experiment.pop('dim_reduce')
+            reducer = self._get_reducer(reducer_name)
+            if reducer is None:
+                self.reduced_features.append((features, {'dim_reduce': reducer_name} | r_experiment))
+                continue
+
+            reducer.set_params(**r_experiment)
+            dim_reduced_feats = reducer.fit_transform(features)
+            self.reduced_features.append((dim_reduced_feats, {"dim_reduce": reducer_name} | r_experiment))
+        
+        for c_experiment in self.c_experiments:
+            cluster_name = c_experiment.pop('method')
+            
+            for feature_set in self.reduced_features:
+                clusterer = self._get_clusterer(cluster_name)
+                clusterer.set_params(**c_experiment)
+                clusterer.fit(feature_set[0])
+                self.clustered_labels.append((clusterer.labels_), {"method": cluster_name} | c_experiment | feature_set[1])
 
     def eval(self, labels):
         results = []

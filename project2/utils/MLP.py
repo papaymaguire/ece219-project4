@@ -3,6 +3,9 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 class MLP(torch.nn.Module):
+    '''
+    todo add labels_
+    '''
     def __init__(self, num_features):
         super().__init__()
         self.model = nn.Sequential(
