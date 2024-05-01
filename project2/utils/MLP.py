@@ -49,7 +49,7 @@ class MLP(torch.nn.Module, TransformerMixin):
 
         return loss
     
-    def set_params():
+    def set_params(self):
         pass
     
     def fit(self, X, Y):
