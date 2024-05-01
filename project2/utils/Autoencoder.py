@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 from sklearn.base import TransformerMixin
 class Autoencoder(torch.nn.Module, TransformerMixin):
-    def __init__(self, n_components):
+    def __init__(self, n_components=2):
         super().__init__()
         self.n_components = n_components
         self.n_features = None  # to be determined with data
@@ -26,6 +26,9 @@ class Autoencoder(torch.nn.Module, TransformerMixin):
             nn.ReLU(True),
             nn.Linear(640, 1280),
             nn.ReLU(True), nn.Linear(1280, 4096))
+    
+    def set_params(self, n_components=2):
+        self.n_components = n_components
     
     def forward(self, X):
         encoded = self.encoder(X)

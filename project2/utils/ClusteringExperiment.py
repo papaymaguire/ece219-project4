@@ -1,14 +1,15 @@
 import itertools
+from typing import Literal
 
 import pandas as pd
 from sklearn.decomposition import TruncatedSVD, NMF
-from project2.utils.Autoencoder import Autoencoder
 from sklearn.cluster import KMeans, AgglomerativeClustering
 from hdbscan import HDBSCAN
-from project2.utils.MLP import MLP
-
 from sklearn import metrics
 from umap import UMAP
+
+from MLP import MLP
+from Autoencoder import Autoencoder
 
 approved_reducers = ["none", "svd", "nmf", "umap", "auto"]
 approved_clusterers = ["kmeans", "agglom", "hdbscan", "mlp"]
@@ -49,23 +50,18 @@ class ClusteringExperiment:
         else:
             raise ValueError("clusterer not approved")
 
-    def add_reducer(self, reducer, arg_dict):
-        """Any reducer added with an empty arg_dict is ignored, passthrough arg_dict is irrelevant"""
+    def add_reducer(self, reducer: Literal["none", "svd", "nmf", "umap", "auto"], arg_dict):
+        """if reducer is "none" arg_dict is irrelevant"""
         if reducer not in approved_reducers:
             raise ValueError("Reducer not approved")
         if reducer == "none":
             self.reducers.append((reducer, None))
-        elif len(arg_dict) == 0:
-            raise ValueError("Must supply a nonempty arg_dict")
         else:
             self.reducers.append((reducer, arg_dict))
 
-    def add_clusterer(self, clusterer, arg_dict):
-        """Any clusterer added with an empty arg_dict is ignored"""
+    def add_clusterer(self, clusterer: Literal["kmeans", "agglom", "hdbscan", "mlp"], arg_dict):
         if clusterer not in approved_clusterers:
             raise ValueError("Clusterer not approved")
-        if len(arg_dict) == 0:
-            raise ValueError("Must supply a nonempty arg_dict")
         self.clusterers.append((clusterer, arg_dict))
 
     def _design(self):
@@ -73,17 +69,16 @@ class ClusteringExperiment:
         self.c_experiments = []
 
         for reducer_config in self.reducers:
-            if reducer_config[0] == "none":
-                self.r_experiments.append({"dim_reduce": "none"})
+            if reducer_config[0] == "none" or len(reducer_config[1]) == 0:
+                self.r_experiments.append({"dim_reduce": reducer_config[0]})
                 continue
-            if len(reducer_config[1]) == 0:
-                raise ValueError("Empty arg_dict found in reducer_config")
             r_keys, r_values = zip(*reducer_config[1].items())
             arg_experiments = [dict(zip(r_keys, v)) for v in itertools.product(*r_values)]
             self.r_experiments.append([{"dim_reduce": reducer_config[0]} | a for a in arg_experiments])
         for cluster_config in self.clusterers:
             if len(cluster_config[1]) == 0:
-                raise ValueError("Empty arg_dict found in cluster_config")
+                self.c_experiments.append({"method": cluster_config[0]})
+                continue
             c_keys, c_values = zip(*cluster_config[1].items())
             c_arg_experiments = [dict(zip(c_keys, v)) for v in itertools.product(*c_values)]
             self.c_experiments.append([{"method": cluster_config[0]} | a for a in c_arg_experiments])
@@ -131,3 +126,4 @@ class ClusteringExperiment:
             results.append(metadata | scores)
         self.results = pd.DataFrame(results)
         return self.results
+
