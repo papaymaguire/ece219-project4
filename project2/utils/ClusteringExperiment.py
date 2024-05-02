@@ -105,7 +105,11 @@ class ClusteringExperiment:
             for feature_set in self.reduced_features:
                 clusterer = self._get_clusterer(cluster_name)
                 clusterer.set_params(**c_experiment)
-                clusterer.fit(feature_set[0])
+                try:
+                    clusterer.fit(feature_set[0])
+                except Exception as e:
+                    self.clustered_labels.append((None, {"method": cluster_name, "error": e} | c_experiment | feature_set[1]))
+                    continue
                 self.clustered_labels.append((clusterer.labels_, {"method": cluster_name} | c_experiment | feature_set[1]))
 
     def eval(self, labels):
@@ -113,6 +117,9 @@ class ClusteringExperiment:
         for strategy in self.clustered_labels:
             pred_labels = strategy[0]
             metadata = strategy[1]
+            if pred_labels is None:
+                results.append(metadata)
+                continue
             scores = {}
             scores["Homogeneity"] = metrics.homogeneity_score(labels, pred_labels)
             scores["Completeness"] = metrics.completeness_score(labels, pred_labels)
