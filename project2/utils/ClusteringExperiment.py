@@ -8,11 +8,10 @@ from hdbscan import HDBSCAN
 from sklearn import metrics
 from umap import UMAP
 
-from project2.utils.MLP import MLP
 from project2.utils.Autoencoder import Autoencoder
 
 approved_reducers = ["none", "svd", "nmf", "umap", "auto"]
-approved_clusterers = ["kmeans", "agglom", "hdbscan", "mlp"]
+approved_clusterers = ["kmeans", "agglom", "hdbscan"]
 
 class ClusteringExperiment:
     def __init__(self) -> None:
@@ -45,8 +44,6 @@ class ClusteringExperiment:
             return AgglomerativeClustering()
         elif clusterer_name == "hdbscan":
             return HDBSCAN()
-        elif clusterer_name == "mlp":
-            return MLP()
         else:
             raise ValueError("clusterer not approved")
 
@@ -59,7 +56,7 @@ class ClusteringExperiment:
         else:
             self.reducers.append((reducer, arg_dict))
 
-    def add_clusterer(self, clusterer: Literal["kmeans", "agglom", "hdbscan", "mlp"], arg_dict):
+    def add_clusterer(self, clusterer: Literal["kmeans", "agglom", "hdbscan"], arg_dict):
         if clusterer not in approved_clusterers:
             raise ValueError("Clusterer not approved")
         self.clusterers.append((clusterer, arg_dict))

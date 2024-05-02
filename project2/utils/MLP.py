@@ -66,9 +66,20 @@ class MLP(torch.nn.Module, TransformerMixin):
         )
         self.cuda()
         self.train(X, Y)
-        self.labels_ = self(X).cpu().numpy()
+        output = self(X)
+        self.labels_ = torch.argmax(output, dim=1).cpu().numpy()
         return self
 
     def transform(self, X):
         X = torch.tensor(X, dtype=torch.float32, device='cuda')
-        return self(X).cpu().numpy()
+        output = self(X)
+        return torch.argmax(output, dim=1).cpu().numpy()
+    
+'''
+xor example for syntax debugging
+mlp = MLP()
+x = [[1, 1], [0, 0], [1, 0], [0,1]]
+y = [0, 0, 1, 1]
+mlp.fit(x, y)
+print(mlp.labels_)
+'''
