@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name="project1",
+    name="project3",
     install_requires=[
         "pandas",
         "scipy",
