@@ -5,11 +5,12 @@ from sklearn.model_selection import cross_validate, GridSearchCV
 from sklearn.metrics import root_mean_squared_error
 from skopt import BayesSearchCV
 from project4.utils.WinePreprocessing import WinePreprocessing
+from project4.utils.TweetHelper import TweetHelper
 
 RMSE_SCORING = "neg_root_mean_squared_error"
 
 class TrainingHelper:
-    def __init__(self, estimator, dataset: WinePreprocessing, subset: Literal["original", "scaled", "reduced"]) -> None:
+    def __init__(self, estimator, dataset: WinePreprocessing | TweetHelper, subset: Literal["original", "scaled", "reduced"]) -> None:
         self.estimator = estimator
         self.dataset = dataset
         self.subset = subset
