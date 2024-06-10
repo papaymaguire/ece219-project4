@@ -1,8 +1,9 @@
 from typing import Literal
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import cross_validate
+from sklearn.model_selection import cross_validate, GridSearchCV
 from sklearn.metrics import root_mean_squared_error
+from skopt import BayesSearchCV
 from project4.utils.WinePreprocessing import WinePreprocessing
 
 RMSE_SCORING = "neg_root_mean_squared_error"
@@ -34,3 +35,23 @@ class TrainingHelper:
         test_rmse = root_mean_squared_error(self.y_test, preds)
 
         return best_estimator, scores_df, test_rmse
+    
+    def grid(self, grid):
+        search = GridSearchCV(self.estimator, grid,
+                               scoring=RMSE_SCORING, n_jobs=-3, refit=True, cv=10, return_train_score=True)
+        search.fit(self.X_train, self.y_train)
+        best_estimator = search.best_estimator_
+        grid_results = pd.DataFrame(search.cv_results_)
+        preds = search.predict(self.X_test)
+        test_rmse = root_mean_squared_error(self.y_test, preds)
+        return best_estimator, grid_results, test_rmse
+    
+    def bayes(self, space, n_iter):
+        search = BayesSearchCV(self.estimator, space, n_iter=n_iter,
+                               scoring=RMSE_SCORING, n_jobs=-3, cv=10, refit=True, random_state=0, return_train_score=True)
+        search.fit(self.X_train, self.y_train)
+        best_estimator = search.best_estimator_
+        grid_results = pd.DataFrame(search.cv_results_)
+        preds = search.predict(self.X_test)
+        test_rmse = root_mean_squared_error(self.y_test, preds)
+        return best_estimator, grid_results, test_rmse
